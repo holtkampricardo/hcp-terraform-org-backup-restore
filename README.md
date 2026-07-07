@@ -295,8 +295,9 @@ After restore:
 
 For a full feature-by-feature view, see [Coverage Matrix](#coverage-matrix).
 
+- Historical runs cannot be restored as native run objects. `runs/*.json` (from `--export-runs-history`) is audit-only.
 - Sensitive variable values may be unreadable via API and therefore not restorable automatically.
-- Some integration-specific settings (VCS/OAuth/agent pools) can require manual reconfiguration.
+- VCS, OAuth, and agent pool integrations may require manual reconfiguration after restore.
 - User membership recovery can require invitation acceptance workflow.
 - Existing resources are handled in best-effort mode and may be skipped to avoid destructive behavior.
 

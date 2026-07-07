@@ -22,6 +22,7 @@ import hashlib
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 import time
@@ -538,6 +539,9 @@ def backup_command(args: argparse.Namespace) -> int:
 
     if args.upload:
         upload_backup(root, args.upload)
+        # Keep local backup on upload failures; remove only after successful upload.
+        shutil.rmtree(root)
+        print(f"[backup] upload successful; removed local backup dir: {root}")
 
     return 0
 

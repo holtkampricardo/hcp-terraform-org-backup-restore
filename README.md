@@ -172,6 +172,15 @@ python3 hcp_tf_backup_restore.py backup \
   --upload "s3://my-bucket/hcp-tf-backups"
 ```
 
+Upload behavior:
+
+- The command uploads the current backup folder (`<YYYYmmdd-HHMMSS>`) to the given prefix.
+- Resulting path looks like: `s3://my-bucket/hcp-tf-backups/<YYYYmmdd-HHMMSS>/...`
+- If you want org-level grouping in remote storage, include it in the prefix:
+  `--upload "s3://my-bucket/hcp-tf-backups/<ORG_NAME>"`
+- After a successful upload, the local backup folder is automatically removed.
+- If upload fails, local files are preserved for retry/troubleshooting.
+
 ### Backup + GCS upload
 
 ```bash
@@ -180,6 +189,8 @@ python3 hcp_tf_backup_restore.py backup \
   --state-versions 5 \
   --upload "gs://my-bucket/hcp-tf-backups"
 ```
+
+The same path behavior and local cleanup rules apply to GCS (using `gs://...`).
 
 ### Restore from backup
 

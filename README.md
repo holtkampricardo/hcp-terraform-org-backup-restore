@@ -41,10 +41,70 @@ Always test in non-production environments before using in production.
 - Restores state versions using lock -> upload -> finalize -> unlock flow.
 - Attempts to restore teams and workspace-level team access.
 
-## What This Tool Does Not Do
+## Coverage Matrix
 
-- It does **not** re-import historical runs as native HCP Terraform run history.
-- It can export runs for audit (`runs/*.json`), but those are not restorable as first-class run objects.
+This tool targets **workspace-centric disaster recovery**: rebuild org structure, restore configuration, and recover state. The matrix below separates what is supported today from known gaps and from items that are intentionally out of scope.
+
+Legend:
+
+| Symbol | Meaning |
+| --- | --- |
+| ✅ | Supported |
+| ⚠️ | Partially supported |
+| 🔜 | Feasible via public API, not implemented in this tool yet |
+| ⛔ | Out of scope for this tool |
+
+### Supported today
+
+| Area | Backup | Restore | Notes |
+| --- | --- | --- | --- |
+| Projects | ✅ | ✅ | Name + description |
+| Variable sets + variables | ✅ | ✅ | Global, project, and workspace scope |
+| Remote state consumers | ✅ | ✅ | Remapped by workspace name |
+| Workspace state versions | ✅ | ✅ | Latest N finalized `.tfstate` files per workspace |
+
+### Partially supported
+
+| Area | Backup | Restore | Gap / follow-up |
+| --- | --- | --- | --- |
+| Organization metadata | ✅ | ⚠️ | `org.json` is exported; restore mainly uses org name/email |
+| Workspaces | ✅ | ⚠️ | Recreated with a subset of settings (VCS triggers, execution mode, etc.) |
+| Workspace variables | ✅ | ⚠️ | Sensitive values may be unreadable via API |
+| Tags | ✅ | ⚠️ | Enhanced tags usually restore; flat tags may fail across orgs |
+| Teams + workspace access | ✅ | ⚠️ | Best-effort recreation of teams and permissions |
+| Workspace VCS settings | ✅ | ⚠️ | Repo metadata is saved; OAuth/GitHub App must be reconnected manually |
+| Agent-based workspaces | ✅ | ⚠️ | Falls back to `remote` if agent pool cannot be remapped |
+| Run history (optional) | ⚠️ | ⛔ | `--export-runs-history` is audit-only (`runs/*.json`) |
+
+### Not implemented yet (API-feasible)
+
+These gaps can be automated with the public HCP Terraform API, but are not implemented in this repository yet:
+
+| Area | API automation | Main caveat |
+| --- | --- | --- |
+| Policy sets and policies (Sentinel/OPA) | Yes | VCS-linked sets need OAuth reconnect; API-uploaded tarball sets are hard to re-export |
+| Terraform Stacks | Yes (complex) | Different state lifecycle; larger implementation effort |
+| Run Tasks | Yes | Task metadata restores; HMAC keys are write-only and may need re-entry |
+| Agent pool configuration | Yes (partial) | Pool metadata/scope can be recreated; agents and agent tokens must be redeployed |
+| Private Module/Provider Registry | Yes | Non-VCS artifacts can be mirrored; VCS-linked modules depend on repo access |
+| Organization memberships | Yes (partial) | Users can be re-invited via API; invite acceptance is still required |
+| Team project access | Yes | |
+| Workspace notifications | Yes (partial) | URLs/triggers can be restored; notification auth tokens are write-only |
+
+### Out of scope (by design)
+
+These cannot be fully automated today, are secret-by-nature, or are not DR configuration:
+
+- **API tokens** (org/team/user): secrets; must be rotated/recreated.
+- **OAuth tokens / GitHub App credentials**: cannot be exported; reconnect integrations after restore.
+- **SSH private keys**: HCP Terraform API only returns metadata; private key text is write-only.
+- **SSO / SAML setup**: configured primarily via UI and IdP integration, not a full API backup/restore flow.
+- **Notification auth tokens**: write-only; webhook URLs can be automated, secrets cannot.
+- **Terraform Actions**: defined in Terraform code, not standalone org objects. They come back with workspace config + VCS + state.
+- **Runs, plans, applies, policy checks, action invocations**: operational history, not configuration.
+- **Workspace locks / live run queues**: transient runtime state.
+- **Billing, entitlements, and subscription tier**: managed by the HCP Terraform platform.
+- **Native 30-day recoverable items UI**: use HashiCorp platform recovery when available; this tool is for external backup/restore.
 
 ## Requirements
 
@@ -232,6 +292,8 @@ After restore:
 - `restore-report.json` is generated with warnings and pending items.
 
 ## Known Limitations
+
+For a full feature-by-feature view, see [Coverage Matrix](#coverage-matrix).
 
 - Sensitive variable values may be unreadable via API and therefore not restorable automatically.
 - Some integration-specific settings (VCS/OAuth/agent pools) can require manual reconfiguration.

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local editor / OS artifacts
+.DS_Store
+
+# Terraform local artifacts (if used for smoke tests)
+.terraform/
+.terraform.lock.hcl
+*.tfplan
+crash.log
+*.tfstate
+*.tfstate.*
+
+# Project-generated backups (sensitive)
+backups/
+
+# Optional local smoke-test folder examples
+tfc-smoke/
+
+# Local presentation artifacts
+PRESENTATION.md
+HCP_Terraform_Backup_Restore_Presentation.pptx
+

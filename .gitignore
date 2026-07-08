@@ -21,6 +21,9 @@ crash.log
 *.tfstate
 *.tfstate.*
 
+# Local secrets and demo config
+.env
+
 # Project-generated backups (sensitive)
 backups/
 

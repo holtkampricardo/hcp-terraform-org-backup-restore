@@ -2,12 +2,16 @@
 
 ## 1) Preparation (before incident)
 
+- Copy and configure local env:
+  - `cp .env.example .env`
+  - set `HCP_TF_TOKEN`, `SOURCE_ORG`, `TARGET_ORG`, `ADMIN_EMAIL`
 - Validate `HCP_TF_TOKEN` and required permissions:
   - read/write state versions
   - lock/unlock workspace
   - manage workspaces/projects/variables
 - Schedule recurring backups:
-  - `python3 hcp_tf_backup_restore.py backup --org "<ORG>" --state-versions 5 --export-runs-history`
+  - `set -a && source .env && set +a`
+  - `python3 hcp_tf_backup_restore.py backup --org "$SOURCE_ORG" --state-versions 5 --export-runs-history`
 - Define backup storage strategy:
   - local only, or local + `--upload s3://...` / `--upload gs://...`
 - Periodically verify:
@@ -18,19 +22,19 @@
 ## 2) Incident response (deleted org/workspaces)
 
 - Identify latest valid backup:
-  - `LATEST="$(ls -1t backups/<ORG> | head -n 1)"`
+  - `LATEST="$(ls -1t backups/$SOURCE_ORG | head -n 1)"`
 - If org was deleted and you need the same org name:
   - open a HashiCorp support ticket to re-enable org-name reuse.
 - Run restore:
   - Same org name:
-    - `python3 hcp_tf_backup_restore.py restore --backup-dir "backups/<ORG>/$LATEST" --org-name "<ORG>"`
+    - `python3 hcp_tf_backup_restore.py restore --backup-dir "backups/$SOURCE_ORG/$LATEST" --org-name "$SOURCE_ORG"`
   - New org name:
-    - `python3 hcp_tf_backup_restore.py restore --backup-dir "backups/<ORG>/$LATEST" --org-name "<TARGET_ORG>" --org-email "admin@example.com"`
+    - `python3 hcp_tf_backup_restore.py restore --backup-dir "backups/$SOURCE_ORG/$LATEST" --org-name "$TARGET_ORG" --org-email "$ADMIN_EMAIL"`
 
 ## 3) Post-restore validation
 
 - Check restore output:
-  - `cat "backups/<ORG>/$LATEST/restore-report.json"`
+  - `cat "backups/$SOURCE_ORG/$LATEST/restore-report.json"`
 - Validate in HCP Terraform:
   - projects and workspaces recreated
   - variables and variable sets restored

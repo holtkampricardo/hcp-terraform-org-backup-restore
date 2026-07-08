@@ -1007,7 +1007,18 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def load_local_dotenv() -> None:
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        return
+    env_path = pathlib.Path(__file__).resolve().parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+
+
 def main() -> int:
+    load_local_dotenv()
     parser = build_parser()
     args = parser.parse_args()
     try:

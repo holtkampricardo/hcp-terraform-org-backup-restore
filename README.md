@@ -129,12 +129,19 @@ pip install -r requirements.txt
 Set token:
 
 ```bash
-export HCP_TF_TOKEN="..."
+cp .env.example .env
+# Edit .env and set HCP_TF_TOKEN
+```
+
+The script auto-loads `.env` on startup. For shell variables used in demo commands (`SOURCE_ORG`, etc.), run:
+
+```bash
+set -a && source .env && set +a
 ```
 
 ## Authentication and Token Strategy
 
-This tool uses a single bearer token via `HCP_TF_TOKEN` (or `--token`).
+This tool uses a single bearer token via `HCP_TF_TOKEN` (from `.env`, environment, or `--token`).
 
 ### Token types in HCP Terraform (practical view)
 
